@@ -1,0 +1,22 @@
+# dependencies
+node_modules/
+
+# next.js
+.next/
+out/
+next-env.d.ts
+*.tsbuildinfo
+
+# env files — never commit real secrets
+.env
+.env.local
+.env.*.local
+
+# demo credentials are kept outside the repo
+demo-credentials*.txt
+
+# misc
+.DS_Store
+npm-debug.log*
+.vercel
+supabase/.temp/
