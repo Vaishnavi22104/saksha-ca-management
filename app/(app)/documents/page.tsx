@@ -1,9 +1,12 @@
 import Link from "next/link";
+import { redirect } from "next/navigation";
+import { Pager } from "@/components/Pager";
+import { isOutOfRange, pageHref, parsePage, rangeFor } from "@/lib/pagination";
 import { EmptyState, PageHeader, Panel } from "@/components/ui";
 import { requireUser } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 import { formatDate } from "@/lib/format";
-import { REQUEST_SELECT, REQUEST_STATUS, isRequestOpen, needsClient } from "@/lib/documents";
+import { REQUEST_SELECT, REQUEST_STATUS, isRequestOpen } from "@/lib/documents";
 import type { DocumentRequestRow, DocumentRequestStatus } from "@/lib/types";
 
 const FILTERS: { key: string; label: string; statuses?: DocumentRequestStatus[] }[] = [
@@ -13,19 +16,32 @@ const FILTERS: { key: string; label: string; statuses?: DocumentRequestStatus[] 
   { key: "all", label: "All" },
 ];
 
-export default async function DocumentsPage({ searchParams }: { searchParams: Promise<{ view?: string }> }) {
+export default async function DocumentsPage({ searchParams }: { searchParams: Promise<{ view?: string; page?: string }> }) {
   const user = await requireUser(["ADMIN", "STAFF", "CLIENT"]);
-  const { view } = await searchParams;
+  const { view, page: pageParam } = await searchParams;
+  const page = parsePage(pageParam);
+  const { from, to } = rangeFor(page);
   const client = user.role === "CLIENT";
   const active = FILTERS.find((f) => f.key === view) ?? FILTERS[0];
 
   const supabase = await createClient();
-  let query = supabase.from("document_requests").select(REQUEST_SELECT).order("created_at", { ascending: false });
+  let query = supabase.from("document_requests").select(REQUEST_SELECT, { count: "exact" }).order("created_at", { ascending: false }).order("id");
   if (active.statuses) query = query.in("status", active.statuses);
 
-  const { data } = await query;
+  const { data, count, error } = await query.range(from, to);
+  if (isOutOfRange(error)) redirect(pageHref("/documents", { view }, 1));
   const requests = (data ?? []) as unknown as DocumentRequestRow[];
-  const waiting = requests.filter((r) => needsClient(r.status));
+  const total = count ?? requests.length;
+
+  // The banner counts everything still owed, not just this page.
+  let waitingCount = 0;
+  if (client) {
+    const { count: owed } = await supabase
+      .from("document_requests")
+      .select("id", { count: "exact", head: true })
+      .in("status", ["REQUESTED", "REJECTED"]);
+    waitingCount = owed ?? 0;
+  }
 
   return (
     <>
@@ -39,11 +55,11 @@ export default async function DocumentsPage({ searchParams }: { searchParams: Pr
         actions={client ? undefined : <Link className="btn primary" href="/documents/new">Request a document</Link>}
       />
 
-      {client && waiting.length > 0 && (
+      {client && waitingCount > 0 && (
         <div className="notice" role="status">
-          {waiting.length === 1
+          {waitingCount === 1
             ? "1 document is still needed from you."
-            : `${waiting.length} documents are still needed from you.`}
+            : `${waitingCount} documents are still needed from you.`}
         </div>
       )}
 
@@ -104,6 +120,7 @@ export default async function DocumentsPage({ searchParams }: { searchParams: Pr
               : <Link href="/documents/new">Request a document from a client.</Link>}
           </EmptyState>
         )}
+        <Pager path="/documents" params={{ view }} page={page} total={total} />
       </Panel>
     </>
   );

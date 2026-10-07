@@ -7,6 +7,7 @@ export default async function LoginPage({ searchParams }: { searchParams: Promis
   const notice =
     reason === "inactive" ? "This account is inactive. Contact your CA firm."
     : reason === "signedout" ? "You have been signed out."
+    : reason === "reset" ? "Password updated. Sign in with your new password."
     : undefined;
 
   return (

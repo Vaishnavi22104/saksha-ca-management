@@ -1,7 +1,8 @@
 import { createServerClient, type CookieOptions } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 
-const PUBLIC_PATHS = ["/login", "/auth"];
+// /api/cron checks its own secret; /api/health only reports "up or down".
+const PUBLIC_PATHS = ["/login", "/auth", "/forgot-password", "/api/health", "/api/cron"];
 
 /**
  * @supabase/ssr types `cookies` as a union, so TypeScript cannot infer this

@@ -85,3 +85,17 @@ begin;
 delete from public.activity_logs;
 -- EXPECT: ERROR Activity logs cannot be modified or deleted (even as postgres)
 rollback;
+
+-- 10. Nobody signed in can run the reminder job ------------------------
+begin;
+select pg_temp.act_as('anil@sharma-associates.test');
+select public.send_due_reminders();
+-- EXPECT: ERROR permission denied for function send_due_reminders
+rollback;
+
+-- 11. The reminder log is invisible to users --------------------------
+begin;
+select pg_temp.act_as('anil@sharma-associates.test');
+select count(*) as visible from public.reminders_sent;
+-- EXPECT: 0 (row-level security with no policy; only the server's service role reads it)
+rollback;

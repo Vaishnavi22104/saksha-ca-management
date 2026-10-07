@@ -1,35 +1,44 @@
 import Link from "next/link";
+import { redirect } from "next/navigation";
 import { ClientStatusBadge, EmptyState, PageHeader, Panel } from "@/components/ui";
 import { requireUser } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 import { plural } from "@/lib/format";
+import { Pager } from "@/components/Pager";
+import { cleanSearch } from "@/lib/search";
+import { isOutOfRange, pageHref, parsePage, rangeFor } from "@/lib/pagination";
 import { isOpen, isOverdue } from "@/lib/tasks";
 import type { Client, Task } from "@/lib/types";
 
 type Row = Client & { client_staff: { staff: { name: string } | null }[] };
 
-/** Strips characters that have meaning in PostgREST filter syntax. */
-const cleanSearch = (q: string) => q.replace(/[,()%*\\]/g, " ").trim().slice(0, 80);
-
-export default async function ClientsPage({ searchParams }: { searchParams: Promise<{ q?: string; status?: string }> }) {
+export default async function ClientsPage({ searchParams }: { searchParams: Promise<{ q?: string; status?: string; page?: string }> }) {
   const user = await requireUser(["ADMIN", "STAFF"]);
   const sp = await searchParams;
   const q = cleanSearch(sp.q ?? "");
   const status = sp.status === undefined ? "ACTIVE" : sp.status;
+  const page = parsePage(sp.page);
+  const { from, to } = rangeFor(page);
 
   const supabase = await createClient();
   let query = supabase
     .from("clients")
-    .select("*, client_staff(staff:users!client_staff_staff_id_fkey(name))")
-    .order("name");
+    .select("*, client_staff(staff:users!client_staff_staff_id_fkey(name))", { count: "exact" })
+    .order("name")
+    .order("id");
   if (status === "ACTIVE" || status === "INACTIVE") query = query.eq("status", status);
   if (q) query = query.or(`name.ilike.%${q}%,gstin.ilike.%${q}%,pan.ilike.%${q}%,email.ilike.%${q}%`);
 
-  const [{ data }, { data: taskData }] = await Promise.all([
-    query,
-    supabase.from("tasks").select("client_id, status, due_date"),
-  ]);
+  const { data, count, error } = await query.range(from, to);
+  if (isOutOfRange(error)) redirect(pageHref("/clients", { q: sp.q, status: sp.status }, 1));
   const clients = (data ?? []) as unknown as Row[];
+  const total = count ?? clients.length;
+
+  // Only count tasks for the clients on this page.
+  const ids = clients.map((c) => c.id);
+  const { data: taskData } = ids.length
+    ? await supabase.from("tasks").select("client_id, status, due_date").in("client_id", ids)
+    : { data: [] };
   const tasks = (taskData ?? []) as Pick<Task, "client_id" | "status" | "due_date">[];
   const now = new Date();
 
@@ -51,7 +60,7 @@ export default async function ClientsPage({ searchParams }: { searchParams: Prom
             <option value="">All statuses</option>
           </select>
           <button className="btn sm" type="submit">Apply</button>
-          <span className="muted small">{plural(clients.length, "client", "clients")}</span>
+          <span className="muted small">{plural(total, "client", "clients")}</span>
         </form>
         {clients.length ? (
           <div className="table-wrap">
@@ -90,6 +99,7 @@ export default async function ClientsPage({ searchParams }: { searchParams: Prom
               : user.role === "ADMIN" ? "Add your first client to begin." : "Your CA will assign clients to you."}
           </EmptyState>
         )}
+        <Pager path="/clients" params={{ q: sp.q, status: sp.status }} page={page} total={total} />
       </Panel>
     </>
   );

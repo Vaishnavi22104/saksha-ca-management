@@ -1954,3 +1954,16 @@ td.right .btn.danger:hover { background: var(--danger-soft); border-color: var(-
   .wf-badge-icon.g-audit { background: var(--surface-2); }
 }
 .wf-glyph { display: block; }
+
+
+/* ================= PAGINATION ================= */
+.pager { display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap;
+  padding:12px 16px; border-top:1px solid var(--line); }
+.pager-links { display:inline-flex; align-items:center; gap:12px; }
+.pager .btn[aria-disabled="true"] { opacity:.45; pointer-events:none; }
+
+/* ================= ERROR PAGES ================= */
+.errpage { margin:12vh auto; max-width:480px; padding:0 20px; text-align:center; }
+.errpage h1 { margin:0 0 8px; }
+.errpage .btns { display:flex; gap:10px; justify-content:center; margin-top:20px; }
+.errpage .ref { color:var(--ink-3); font-size:12px; margin-top:16px; }

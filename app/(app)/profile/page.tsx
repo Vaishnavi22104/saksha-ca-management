@@ -3,6 +3,7 @@ import { requireUser } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 import { ProfileForm } from "./ProfileForm";
 import { ChangePasswordSection } from "./ChangePasswordSection";
+import { EmailPrefs } from "./EmailPrefs";
 import type { Client } from "@/lib/types";
 
 export default async function ProfilePage() {
@@ -15,6 +16,13 @@ export default async function ProfilePage() {
     .from("firms")
     .select("name")
     .eq("id", user.firm_id)
+    .maybeSingle();
+
+  // Absent until migration 8 has been run, in which case the section is simply hidden.
+  const { data: pref, error: prefError } = await supabase
+    .from("users")
+    .select("email_notifications")
+    .eq("id", user.id)
     .maybeSingle();
 
   // For CLIENT users, also load their linked client/business details.
@@ -33,6 +41,7 @@ export default async function ProfilePage() {
       <PageHeader title="Profile" description="Manage your account details and preferences." />
       <ProfileForm user={user} client={client} firmName={firm?.name ?? "—"} />
       <div className="narrow" style={{ marginTop: 0 }}>
+        {!prefError && <EmailPrefs enabled={pref?.email_notifications ?? true} />}
         <ChangePasswordSection />
       </div>
     </>

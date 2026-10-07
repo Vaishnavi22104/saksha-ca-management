@@ -20,3 +20,7 @@ demo-credentials*.txt
 npm-debug.log*
 .vercel
 supabase/.temp/
+
+# personal notes and generated reports stay on this computer
+docs/
+*.docx

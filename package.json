@@ -2,14 +2,19 @@
   "name": "saksha-ca-management",
   "version": "0.1.0",
   "private": true,
-  "description": "Workflow management platform for small CA firms (MVP, foundation phase)",
+  "description": "SAKSHA — CA practice management: clients, recurring workflows, documents, messages and an AI assistant, with permissions enforced by the database.",
   "scripts": {
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
     "eval:ai": "node scripts/eval-ai.mjs",
     "typecheck": "tsc --noEmit",
-    "seed": "node --env-file=.env.local scripts/seed.mjs"
+    "seed": "node --env-file=.env.local scripts/seed.mjs",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "check": "npm run typecheck && npm test && npm run build",
+    "create-firm": "node --env-file=.env.local scripts/create-firm.mjs",
+    "reset-password": "node --env-file=.env.local scripts/reset-password.mjs"
   },
   "engines": {
     "node": ">=20.6"
@@ -27,6 +32,7 @@
     "@types/node": "^20.17.0",
     "@types/react": "^19.1.0",
     "@types/react-dom": "^19.1.0",
-    "typescript": "^5.8.0"
+    "typescript": "^5.8.0",
+    "vitest": "^3.2.4"
   }
 }

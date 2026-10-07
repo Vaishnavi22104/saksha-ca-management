@@ -1,6 +1,7 @@
 "use client";
 
 import { useActionState } from "react";
+import Link from "next/link";
 import { signIn } from "./actions";
 import { FormAlert, SubmitButton } from "@/components/forms";
 
@@ -21,8 +22,8 @@ export function LoginForm({ notice }: { notice?: string }) {
         <input id="password" name="password" type="password" autoComplete="current-password" required />
       </div>
       <SubmitButton className="btn primary block" pendingText="Signing in…">Sign in</SubmitButton>
-      <p className="small muted" style={{ marginTop: 16 }}>
-        Forgot your password? Your firm&apos;s administrator can reset it for you.
+      <p className="small" style={{ marginTop: 16 }}>
+        <Link href="/forgot-password">Forgot your password?</Link>
       </p>
     </form>
   );

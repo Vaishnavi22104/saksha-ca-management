@@ -1,4 +1,7 @@
 import Link from "next/link";
+import { redirect } from "next/navigation";
+import { Pager } from "@/components/Pager";
+import { isOutOfRange, pageHref, parsePage, rangeFor } from "@/lib/pagination";
 import { ActionButton } from "@/components/ActionButton";
 import { EmptyState, PageHeader, Panel } from "@/components/ui";
 import { requireUser } from "@/lib/auth";
@@ -8,17 +11,20 @@ import { ENTITY_LABEL, NOTIFICATION_SELECT } from "@/lib/notifications";
 import type { AppNotification } from "@/lib/types";
 import { markAllReadAction } from "./actions";
 
-export default async function NotificationsPage({ searchParams }: { searchParams: Promise<{ view?: string }> }) {
+export default async function NotificationsPage({ searchParams }: { searchParams: Promise<{ view?: string; page?: string }> }) {
   await requireUser();
-  const { view } = await searchParams;
+  const { view, page: pageParam } = await searchParams;
   const unreadOnly = view !== "all";
+  const page = parsePage(pageParam);
+  const { from, to } = rangeFor(page);
 
   const supabase = await createClient();
   // RLS already restricts this to the signed-in user's own notifications.
-  let query = supabase.from("notifications").select(NOTIFICATION_SELECT).order("created_at", { ascending: false }).limit(60);
+  let query = supabase.from("notifications").select(NOTIFICATION_SELECT, { count: "exact" }).order("created_at", { ascending: false }).order("id");
   if (unreadOnly) query = query.eq("read", false);
 
-  const { data } = await query;
+  const { data, count, error } = await query.range(from, to);
+  if (isOutOfRange(error)) redirect(pageHref("/notifications", { view }, 1));
   const notifications = (data ?? []) as unknown as AppNotification[];
 
   return (
@@ -60,6 +66,7 @@ export default async function NotificationsPage({ searchParams }: { searchParams
             {unreadOnly ? <Link href="/notifications?view=all">See earlier notifications</Link> : "Nothing here yet."}
           </EmptyState>
         )}
+        <Pager path="/notifications" params={{ view }} page={page} total={count ?? notifications.length} />
       </Panel>
     </>
   );
