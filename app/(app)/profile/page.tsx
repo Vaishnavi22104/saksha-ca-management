@@ -1,33 +1,39 @@
-import { PageHeader, Panel } from "@/components/ui";
+import { PageHeader } from "@/components/ui";
 import { requireUser } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
+import { ProfileForm } from "./ProfileForm";
+import { ChangePasswordSection } from "./ChangePasswordSection";
 import type { Client } from "@/lib/types";
 
 export default async function ProfilePage() {
-  const user = await requireUser(["CLIENT"]);
+  const user = await requireUser(); // all roles allowed
+
   const supabase = await createClient();
-  const { data } = await supabase.from("client_users").select("client:clients(*)").eq("user_id", user.id).maybeSingle();
-  const c = data?.client as unknown as Client | null;
+
+  // Fetch the firm name for display.
+  const { data: firm } = await supabase
+    .from("firms")
+    .select("name")
+    .eq("id", user.firm_id)
+    .maybeSingle();
+
+  // For CLIENT users, also load their linked client/business details.
+  let client: Client | null = null;
+  if (user.role === "CLIENT") {
+    const { data } = await supabase
+      .from("client_users")
+      .select("client:clients(*)")
+      .eq("user_id", user.id)
+      .maybeSingle();
+    client = (data?.client as unknown as Client) ?? null;
+  }
 
   return (
     <>
-      <PageHeader title="Profile" description="To change these details, contact your CA." />
-      <div className="narrow">
-        <Panel padded>
-          {c ? (
-            <dl className="info">
-              <dt>Business name</dt><dd>{c.name}</dd>
-              <dt>Business type</dt><dd>{c.business_type ?? "—"}</dd>
-              <dt>Email</dt><dd>{c.email}</dd>
-              <dt>Phone</dt><dd>{c.phone ?? "—"}</dd>
-              <dt>PAN</dt><dd>{c.pan ?? "—"}</dd>
-              <dt>GSTIN</dt><dd>{c.gstin ?? "—"}</dd>
-              <dt>Portal login</dt><dd>{user.email}</dd>
-            </dl>
-          ) : (
-            <p className="muted">Your profile could not be loaded.</p>
-          )}
-        </Panel>
+      <PageHeader title="Profile" description="Manage your account details and preferences." />
+      <ProfileForm user={user} client={client} firmName={firm?.name ?? "—"} />
+      <div className="narrow" style={{ marginTop: 0 }}>
+        <ChangePasswordSection />
       </div>
     </>
   );

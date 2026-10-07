@@ -57,3 +57,65 @@ export function generateTempPassword(): string {
   const bytes = crypto.getRandomValues(new Uint8Array(12));
   return "Tmp-" + Array.from(bytes, (b) => chars[b % chars.length]).join("");
 }
+
+/** One step of a workflow template, as it arrives from the template form. */
+export const stepSchema = z.object({
+  title: z.string().trim().min(1, "Every step needs a title.").max(200),
+  requires_document: z.boolean(),
+  requires_review: z.boolean(),
+  due_offset_days: z.number().int().min(0, "Use 0 or more days.").max(365, "Use 365 days or fewer."),
+});
+
+export const templateSchema = z.object({
+  name: z.string().trim().min(1, "Give the template a name.").max(120),
+  service_id: z.string().uuid("Choose a service."),
+  description: z.string().trim().max(500).optional(),
+  steps: z.array(stepSchema).min(1, "Add at least one step.").max(30, "Use 30 steps or fewer."),
+});
+
+export const generateWorkflowSchema = z.object({
+  template_id: z.string().uuid("Choose a template."),
+  client_id: z.string().uuid("Choose a client."),
+  financial_year: z.string().regex(/^\d{4}-\d{2}$/, "Use the format 2026-27."),
+  period: z.string().trim().min(1, "Enter a period, for example September 2026.").max(60),
+  due: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Choose a start due date."),
+  assigned_to: z.preprocess((v) => (v === "" ? null : v), z.string().uuid().nullable()),
+  allow_duplicate: z.preprocess((v) => v === "on" || v === "true", z.boolean()),
+});
+
+/** Rebuilds the steps array from the repeated fields of the template form. */
+export function stepsFromFormData(formData: FormData) {
+  const titles = formData.getAll("step_title").map(String);
+  const documents = new Set(formData.getAll("step_document").map(String));
+  const reviews = new Set(formData.getAll("step_review").map(String));
+  const offsets = formData.getAll("step_offset").map(String);
+  return titles
+    .map((title, i) => ({
+      title,
+      requires_document: documents.has(String(i)),
+      requires_review: reviews.has(String(i)),
+      due_offset_days: Number(offsets[i] ?? 0) || 0,
+    }))
+    .filter((s) => s.title.trim() !== "");
+}
+
+export const documentRequestSchema = z.object({
+  client_id: z.string().uuid("Choose a client."),
+  title: z.string().trim().min(1, "Say what you need, for example September bank statement.").max(200),
+  description: z.string().trim().max(500).optional(),
+  task_id: z.preprocess((v) => (v === "" ? null : v), z.string().uuid().nullable()),
+  due: z.preprocess(
+    (v) => (typeof v === "string" && v.trim() === "" ? undefined : v),
+    z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Choose a due date.").optional(),
+  ),
+});
+
+export const rejectionSchema = z.object({
+  reason: z.string().trim().min(3, "Tell the client what is wrong with the file.").max(500),
+});
+
+export const messageSchema = z.object({
+  client_id: z.string().uuid("Choose a client."),
+  message: z.string().trim().min(1, "Write a message first.").max(2000, "Messages are limited to 2000 characters."),
+  task_id: z.preprocess((v) => (v === "" ? null : v), z.string().uuid().nullable()),
+});

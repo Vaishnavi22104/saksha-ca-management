@@ -22,7 +22,7 @@ export function LoginForm({ notice }: { notice?: string }) {
       </div>
       <SubmitButton className="btn primary block" pendingText="Signing in…">Sign in</SubmitButton>
       <p className="small muted" style={{ marginTop: 16 }}>
-        Forgot your password? Ask your CA firm to reset it. Self-service reset is a planned enhancement.
+        Forgot your password? Your firm&apos;s administrator can reset it for you.
       </p>
     </form>
   );

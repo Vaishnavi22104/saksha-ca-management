@@ -1,0 +1,10 @@
+Employee,Designation,Basic,HRA,Allowances,Gross,PF,Professional tax,TDS,Net pay
+Sunil Kadam,Accountant,32000,12800,6400,51200,3840,200,0,47160
+Rupali Jadhav,Accounts assistant,24000,9600,4800,38400,2880,200,0,35320
+Imran Shaikh,Store keeper,21000,8400,4200,33600,2520,200,0,30880
+Nilesh Warke,Sales executive,28000,11200,9800,49000,3360,200,0,45440
+Pooja Deshpande,Office manager,42000,16800,8400,67200,5040,200,2100,59860
+Ravi Tiwari,Driver,18000,7200,3600,28800,2160,200,0,26440
+Aarti Gawande,Housekeeping,14000,5600,2800,22400,1680,200,0,20520
+
+7 employees. Gross 290600  Net 265620

@@ -12,7 +12,7 @@ export default async function ChangePasswordPage() {
     <div className="auth">
       <section className="auth-left">
         <div>
-          <p className="logo">CA Office OS</p>
+          <p className="logo">SAKSHA</p>
           <h1>Set your own password.</h1>
           <p>Your firm created this account with a temporary password. Replace it before you continue.</p>
         </div>

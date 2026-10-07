@@ -23,7 +23,7 @@ export function ClientForm(props: {
       <div className="panel panel-b narrow">
         <h2 style={{ fontSize: 17, marginBottom: 12 }}>Client added</h2>
         <CredentialsNotice state={state} />
-        <p className="small muted">Automated invitation emails are a planned enhancement.</p>
+        <p className="small muted">Share these details with the client directly. They will be asked to set their own password at first sign-in.</p>
         <Link className="btn primary" href={`/clients/${state.clientId}`}>Open client</Link>
       </div>
     );

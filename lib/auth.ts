@@ -12,13 +12,26 @@ export const getCurrentUser = cache(async (): Promise<AppUser | null> => {
   } = await supabase.auth.getUser();
   if (!user) return null;
 
-  const { data } = await supabase
+  // Try with the new profile columns first; fall back to base columns
+  // if the migration hasn't been applied yet.
+  let { data, error } = await supabase
     .from("users")
-    .select("id, firm_id, name, email, role, is_active, must_change_password")
+    .select("id, firm_id, name, email, role, is_active, must_change_password, phone, avatar_url")
     .eq("id", user.id)
     .maybeSingle();
 
-  return (data as AppUser | null) ?? null;
+  if (error) {
+    // Columns don't exist yet — query without them.
+    const res = await supabase
+      .from("users")
+      .select("id, firm_id, name, email, role, is_active, must_change_password")
+      .eq("id", user.id)
+      .maybeSingle();
+    data = res.data ? { ...res.data, phone: null, avatar_url: null } : null;
+  }
+
+  if (!data) return null;
+  return { ...data, phone: data.phone ?? null, avatar_url: data.avatar_url ?? null } as AppUser;
 });
 
 /**

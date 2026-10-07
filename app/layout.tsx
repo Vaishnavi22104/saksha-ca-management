@@ -1,18 +1,20 @@
 import type { Metadata } from "next";
-import { IBM_Plex_Sans, IBM_Plex_Serif } from "next/font/google";
+import { Manrope } from "next/font/google";
 import "./globals.css";
 
-const sans = IBM_Plex_Sans({ subsets: ["latin"], weight: ["400", "500", "600"], variable: "--font-sans" });
-const serif = IBM_Plex_Serif({ subsets: ["latin"], weight: ["500", "600"], variable: "--font-serif" });
+// Neue Montreal is a licensed face; Manrope is the closest free
+// geometric grotesque and carries the same regular/medium pairing.
+const sans = Manrope({ subsets: ["latin"], weight: ["400", "500", "600", "700"], variable: "--font-sans" });
+const display = Manrope({ subsets: ["latin"], weight: ["500", "600"], variable: "--font-serif" });
 
 export const metadata: Metadata = {
-  title: "CA Office OS",
-  description: "Workflow management for small CA firms",
+  title: "SAKSHA",
+  description: "Less chasing. More filing. Practice management for CA firms.",
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" className={`${sans.variable} ${serif.variable}`}>
+    <html lang="en" className={`${sans.variable} ${display.variable}`}>
       <body>{children}</body>
     </html>
   );

@@ -1,0 +1,25 @@
+Code,Ledger,Group,Debit,Credit
+1000,Cash in hand,Current Assets,48200,0
+1010,Bank - Current account 4417,Current Assets,842150,0
+1100,Sundry debtors,Current Assets,1864300,0
+1200,Closing stock,Current Assets,1244000,0
+1300,Furniture and fixtures,Fixed Assets,386000,0
+1310,Computers,Fixed Assets,214500,0
+1320,Accumulated depreciation,Fixed Assets,0,182400
+2000,Sundry creditors,Current Liabilities,0,1122700
+2100,GST payable,Current Liabilities,0,162940
+2110,TDS payable,Current Liabilities,0,88920
+2200,Secured loan - term loan,Loans,0,1450000
+3000,Capital account,Capital,0,2400000
+4000,Sales,Income,0,18642000
+4100,Other income,Income,0,96400
+5000,Purchases,Expenses,12480000,0
+5100,Salaries and wages,Expenses,4656000,0
+5200,Rent,Expenses,480000,0
+5300,Power and fuel,Expenses,292560,0
+5400,Freight outward,Expenses,474000,0
+5500,Bank charges,Expenses,14160,0
+5600,Depreciation,Expenses,182400,0
+5700,Professional fees,Expenses,216590,0
+
+Totals: Debit 24568860  Credit 24568860

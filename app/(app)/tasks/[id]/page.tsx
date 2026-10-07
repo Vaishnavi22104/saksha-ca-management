@@ -6,7 +6,8 @@ import { requireUser } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 import { formatDate } from "@/lib/format";
 import { ACTION_LABEL, TASK_SELECT, TASK_STATUS, allowedNext, isOpen } from "@/lib/tasks";
-import type { Activity, TaskRow } from "@/lib/types";
+import { REQUEST_STATUS } from "@/lib/documents";
+import type { Activity, DocumentRequestStatus, TaskRow } from "@/lib/types";
 import { changeStatusAction } from "../actions";
 import { ReassignForm } from "./ReassignForm";
 
@@ -20,13 +21,15 @@ export default async function TaskPage({ params }: { params: Promise<{ id: strin
   const task = data as unknown as TaskRow;
   const admin = user.role === "ADMIN";
 
-  const [{ data: activityData }, { data: assignData }] = await Promise.all([
+  const [{ data: activityData }, { data: assignData }, { data: requestData }] = await Promise.all([
     supabase.from("activity_logs").select(ACTIVITY_SELECT).eq("entity_type", "task").eq("entity_id", id)
       .order("created_at", { ascending: false }),
     admin
       ? supabase.from("client_staff").select("staff:users!client_staff_staff_id_fkey(id, name, is_active)").eq("client_id", task.client_id)
       : Promise.resolve({ data: null }),
+    supabase.from("document_requests").select("id, title, status").eq("task_id", id).order("created_at"),
   ]);
+  const requests = (requestData ?? []) as { id: string; title: string; status: DocumentRequestStatus }[];
   type StaffRef = { id: string; name: string; is_active: boolean };
   const assignable = ((assignData ?? []) as unknown as { staff: StaffRef | null }[])
     .map((r) => r.staff)
@@ -44,6 +47,7 @@ export default async function TaskPage({ params }: { params: Promise<{ id: strin
         crumb={<><Link href="/tasks">Tasks</Link> / <Link href={`/clients/${task.client_id}`}>{task.client?.name}</Link></>}
         title={task.title}
         description={<TaskStatusBadge status={task.status} dueDate={task.due_date} />}
+        actions={<Link className="btn" href={`/messages/${task.client_id}?task=${task.id}`}>Message client</Link>}
       />
       <div className="grid2">
         <div className="stack">
@@ -70,6 +74,22 @@ export default async function TaskPage({ params }: { params: Promise<{ id: strin
               </p>
             )}
           </Panel>
+          <Panel title="Documents" action={admin || user.role === "STAFF" ? <Link className="small" href={`/documents/new?client=${task.client_id}&task=${task.id}`}>Request a document</Link> : undefined}>
+            {requests.length ? (
+              <ul className="list">
+                {requests.map((r) => (
+                  <li key={r.id}>
+                    <Link className="rowlink" href={`/documents/${r.id}`}>{r.title}</Link>
+                    <span className={`badge ${REQUEST_STATUS[r.status].tone ? "b-" + REQUEST_STATUS[r.status].tone : ""}`}>
+                      {REQUEST_STATUS[r.status].label}
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <div className="panel-b muted small">No document requested for this task.</div>
+            )}
+          </Panel>
           <Panel title="History">
             <Timeline entries={(activityData ?? []) as unknown as Activity[]} viewerRole={user.role} />
           </Panel>
@@ -81,6 +101,17 @@ export default async function TaskPage({ params }: { params: Promise<{ id: strin
             <dt>Service</dt><dd>{task.service?.name}</dd>
             <dt>Financial year</dt><dd>{task.financial_year}</dd>
             <dt>Period</dt><dd>{task.period}</dd>
+            {task.workflow_run_id && (
+              <>
+                <dt>Workflow</dt>
+                <dd>
+                  <Link href={`/workflows/runs/${task.workflow_run_id}`}>
+                    Step {task.workflow_step_no ?? "?"} of this cycle
+                  </Link>
+                  {task.needs_document && <span className="small muted"> · client document expected</span>}
+                </dd>
+              </>
+            )}
             <dt>Due</dt><dd>{formatDate(task.due_date)}, 5:00 PM</dd>
             <dt>Priority</dt><dd><PriorityLabel priority={task.priority} /></dd>
             <dt>CA review</dt><dd>{task.requires_review ? "Required before completion" : "Not required"}</dd>

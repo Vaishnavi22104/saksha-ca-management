@@ -1,4 +1,5 @@
 import { Sidebar } from "@/components/Sidebar";
+import { TopBar } from "@/components/TopBar";
 import { requireUser } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 
@@ -9,7 +10,11 @@ export default async function AppLayout({ children }: { children: React.ReactNod
   const user = await requireUser();
   const supabase = await createClient();
 
-  const { data: firm } = await supabase.from("firms").select("name").eq("id", user.firm_id).maybeSingle();
+  const [{ data: firm }, { count: unread }] = await Promise.all([
+    supabase.from("firms").select("name").eq("id", user.firm_id).maybeSingle(),
+    // RLS limits this count to the signed-in user's own notifications.
+    supabase.from("notifications").select("id", { count: "exact", head: true }).eq("read", false),
+  ]);
 
   let subtitle = user.role === "ADMIN" ? "CA / Admin" : "Staff";
   if (user.role === "CLIENT") {
@@ -24,8 +29,18 @@ export default async function AppLayout({ children }: { children: React.ReactNod
 
   return (
     <div className="app">
-      <Sidebar role={user.role} firmName={firm?.name ?? ""} userName={user.name} subtitle={subtitle} />
-      <main>{children}</main>
+      <Sidebar
+        role={user.role}
+        firmName={firm?.name ?? ""}
+        userName={user.name}
+        subtitle={subtitle}
+        unread={unread ?? 0}
+        avatarUrl={user.avatar_url}
+      />
+      <main>
+        <TopBar userName={user.name} subtitle={subtitle} unread={unread ?? 0} avatarUrl={user.avatar_url} />
+        {children}
+      </main>
     </div>
   );
 }
