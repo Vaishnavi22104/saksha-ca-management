@@ -1,8 +1,8 @@
-# CA Office OS
+# SAKSHA — CA Management System
 
 A privacy-first workflow management platform for small Chartered Accountant (CA) firms. It connects clients, recurring work, staff, deadlines, review and history in one place.
 
-> CA Office OS manages the work **around** the CA. It does not calculate tax, file returns or give professional advice.
+> SAKSHA manages the work **around** the CA. It does not calculate tax, file returns or give professional advice.
 
 **Status:** Feature complete and demonstrable. Built as a 4-week internship project, 12 Sep – 7 Oct 2026.
 
@@ -240,8 +240,8 @@ ollama pull llama3.2
 ### 2. Install
 
 ```bash
-git clone <your-repo-url> ca-office-os
-cd ca-office-os
+git clone <your-repo-url> saksha-ca-management
+cd saksha-ca-management
 npm install
 ```
 

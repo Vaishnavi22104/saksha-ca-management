@@ -1,5 +1,5 @@
 -- =====================================================================
--- CA Office OS — Migration 6: AI conversations
+-- SAKSHA — Migration 6: AI conversations
 --
 -- The assistant becomes one chat instead of four forms. Conversations
 -- are stored so the CA can come back to them, and so every answer the

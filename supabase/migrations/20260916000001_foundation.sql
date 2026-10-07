@@ -1,5 +1,5 @@
 -- =====================================================================
--- CA Office OS — Migration 1: Foundation
+-- SAKSHA — Migration 1: Foundation
 -- Tables: firms, users, clients, client_users, client_staff, services,
 --         tasks, activity_logs
 -- Later migrations add workflow templates/runs, documents, messages,

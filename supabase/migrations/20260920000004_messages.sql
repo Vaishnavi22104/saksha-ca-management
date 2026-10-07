@@ -1,5 +1,5 @@
 -- =====================================================================
--- CA Office OS — Migration 4: Client portal messaging
+-- SAKSHA — Migration 4: Client portal messaging
 --
 -- One thread per client: the CA firm on one side, the client on the
 -- other. A message can optionally point at the task it is about.

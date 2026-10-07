@@ -211,7 +211,7 @@ async function buildDoc() {
             spacing: { before: 400, after: 100 },
             children: [
               new TextRun({
-                text: "SAKSHA — CA Office OS",
+                text: "SAKSHA — CA Management System",
                 bold: true,
                 font: FONT_FAMILY,
                 size: 48,
